@@ -9,3 +9,8 @@ cmake_policy(SET CMP0072 NEW)
 add_executable(KnightPack 
 	src/main.cpp
 )
+
+target_include_directories(KnightPack
+	PRIVATE
+	dependencies
+)

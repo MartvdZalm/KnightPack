@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cstdlib>
 #include <cstdio>
 #include <memory>
@@ -6,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
+#include <nlohmann/json.hpp>
 
 std::string exec(const char* cmd)
 {
@@ -25,34 +27,72 @@ std::string exec(const char* cmd)
     return result;
 }
 
-
-void processArguments(const std::unordered_map<std::string, std::string> &flags)
+void displayHelp(const nlohmann::json& flagsJson)
 {
-	if (flags.find("--name") != flags.end()) {
-		std::cout << "Searching for package by name: " << flags.at("--name") << std::endl;
-		std::cout << exec(("dpkg -l | grep " + flags.at("--name")).c_str()) << std::endl;
-	}
+    std::cout << "Available commands: " << std::endl;
+    for (const auto& flag : flagsJson["flags"]) {
+        std::cout << "  " << flag["short"] << ", " << flag["flag"] << " : " << flag["description"] << std::endl;
+    }
 }
 
+void processArguments(const std::unordered_map<std::string, std::string>& flags)
+{
+    if (flags.find("search_by_name") != flags.end()) {
+        std::cout << "Searching for package by name: " << flags.at("search_by_name") << std::endl;
+        std::cout << exec(("dpkg -l | grep " + flags.at("search_by_name")).c_str()) << std::endl;
+    }
+
+    if (flags.find("version") != flags.end()) {
+        std::cout << "Version 1.0.0" << std::endl;
+    }
+}
 
 int main(int argc, char* argv[])
 {
-	std::unordered_map<std::string, std::string> flags;
+    std::ifstream flagsFile("../src/flags.json");
+    if (!flagsFile.is_open()) {
+        std::cerr << "Failed to open flags.json" << std::endl;
+        return 1;
+    }
+    
+    nlohmann::json flagsJson;
+    flagsFile >> flagsJson;
 
-	for (int i = 0; i < argc; ++i) {
-		std::string arg = argv[i];
+    std::unordered_map<std::string, std::string> flags;
 
-		if (arg.starts_with("--")) {
-			if (i + 1 < argc && !std::string(argv[i + 1]).starts_with("--")) {
-				flags[arg] = argv[i + 1];
-				++i;
-			} else {
-				flags[arg] = "";
-			}
-		}
-	}
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
 
-	processArguments(flags);
+        if (arg == "--help") {
+            displayHelp(flagsJson);
+            return 0;
+        }
+
+        bool flagHandled = false;
+        for (const auto& flag : flagsJson["flags"]) {
+            if (arg == flag["flag"] || arg == flag["short"]) {
+                if (i + 1 < argc && !std::string(argv[i + 1]).starts_with("-")) {
+                    flags[flag["name"]] = argv[i + 1];
+                    ++i;
+                } else {
+                    flags[flag["name"]] = "";
+                }
+                flagHandled = true;
+                break;
+            }
+        }
+
+        if (!flagHandled) {
+            std::cerr << "Unknown flag: " << arg << std::endl;
+            return 1;
+        }
+    }
+
+    if (argc <= 1) {
+        displayHelp(flagsJson);
+    }
+
+    processArguments(flags);
 
     return 0;
 }

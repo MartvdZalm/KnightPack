@@ -1,0 +1,16 @@
+{
+  "flags": [
+    {
+      "name": "search_by_name",
+      "flag": "--name",
+      "short": "-n",
+      "description": "Search for a package by name"
+    },
+    {
+      "name": "version",
+      "flag": "--version",
+      "short": "-v",
+      "description": "Display the version of the program"
+    }
+  ]
+}
