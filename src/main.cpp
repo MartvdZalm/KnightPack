@@ -35,6 +35,28 @@ void displayHelp(const nlohmann::json& flagsJson)
     }
 }
 
+void showPackagePaths(const std::string& packageName)
+{
+    std::string result = exec(("dpkg -L " + packageName).c_str());
+
+    std::string binaryPath;
+    std::string docPath;
+    
+    std::istringstream resultStream(result);
+    std::string line;
+    while (std::getline(resultStream, line)) {
+        if (line.find("/bin/") != std::string::npos) {
+            binaryPath = line;
+        }
+        if (line.find("/share/doc/") != std::string::npos) {
+            docPath = line;
+        }
+    }
+
+    std::cout << "Binary: " << (binaryPath.empty() ? "Not found" : binaryPath) << std::endl;
+    std::cout << "Docs: " << (docPath.empty() ? "Not found" : docPath) << std::endl;
+}
+
 void processArguments(const std::unordered_map<std::string, std::string>& flags)
 {
     if (flags.find("search_by_name") != flags.end()) {
@@ -44,6 +66,11 @@ void processArguments(const std::unordered_map<std::string, std::string>& flags)
 
     if (flags.find("version") != flags.end()) {
         std::cout << "Version 1.0.0" << std::endl;
+    }
+
+    if (flags.find("show_package_paths") != flags.end()) {
+        std::cout << "Showing paths for package: " << flags.at("show_package_paths") << std::endl;
+        showPackagePaths(flags.at("show_package_paths"));
     }
 }
 

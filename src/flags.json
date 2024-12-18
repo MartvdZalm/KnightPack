@@ -11,6 +11,12 @@
       "flag": "--version",
       "short": "-v",
       "description": "Display the version of the program"
+    },
+    {
+      "name": "show_package_paths",
+      "flag": "--show_package_paths",
+      "short": "-p",
+      "description": "Show the binary and documentation paths for a package"
     }
   ]
 }
