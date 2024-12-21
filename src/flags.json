@@ -16,8 +16,17 @@
       "name": "show_package_paths",
       "flag": "--show_package_paths",
       "short": "-p",
-      "flegs": ["-a"],
       "description": "Show the binary and documentation paths for a package"
+    },
+    {
+      "name": "install",
+      "flag": "--install",
+      "description": "Install package"
+    },
+    {
+      "name": "remove",
+      "flag": "--remove",
+      "description": "Remove package"
     }
   ]
 }

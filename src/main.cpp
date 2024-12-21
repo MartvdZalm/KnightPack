@@ -10,6 +10,7 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 
+
 std::string exec(const char* cmd)
 {
     std::array<char, 128> buffer;
@@ -17,14 +18,30 @@ std::string exec(const char* cmd)
     std::shared_ptr<FILE> pipe(popen(cmd, "r"), fclose);
 
     if (!pipe) {
-        throw std::runtime_error("popen() failed!");
+        throw std::runtime_error("Failed to execute command: " + std::string(cmd));
     }
 
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
 
+    if (result.empty()) {
+        std::cerr << "Command failed or returned empty output." << std::endl;
+    }
+
     return result;
+}
+
+void installPackage(const std::string& packageName)
+{
+    std::string cmd = "sudo apt-get install -y " + packageName;
+    std::cout << exec(cmd.c_str()) << std::endl;
+}
+
+void removePackage(const std::string& packageName)
+{
+    std::string cmd = "sudo apt-get remove -y " + packageName;
+    std::cout << exec(cmd.c_str()) << std::endl;
 }
 
 void displayHelp(const nlohmann::json& flagsJson)
@@ -75,6 +92,14 @@ void processArguments(const std::unordered_map<std::string, std::string>& flags)
         std::cout << "Showing paths for package: " << flags.at("show_package_paths") << std::endl;
         showPackagePaths(flags.at("show_package_paths"));
     }
+
+    if (flags.find("install") != flags.end()) {
+        installPackage(flags.at("install"));
+    }
+
+    if (flags.find("remove") != flags.end()) {
+        removePackage(flags.at("remove"));
+    }
 }
 
 int main(int argc, char* argv[])
@@ -99,8 +124,9 @@ int main(int argc, char* argv[])
         }
 
         bool flagHandled = false;
+        
         for (const auto& flag : flagsJson["flags"]) {
-            if (arg == flag["flag"] || arg == flag["short"]) {
+            if (arg == flag["flag"] || (flag.contains("short") && arg == flag["short"])) {
                 if (i + 1 < argc && !std::string(argv[i + 1]).starts_with("-")) {
                     flags[flag["name"]] = argv[i + 1];
                     ++i;
