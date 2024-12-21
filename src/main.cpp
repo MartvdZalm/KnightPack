@@ -51,10 +51,13 @@ void showPackagePaths(const std::string& packageName)
         if (line.find("/share/doc/") != std::string::npos) {
             docPath = line;
         }
+
+        std::cout << line << std::endl;
     }
 
-    std::cout << "Binary: " << (binaryPath.empty() ? "Not found" : binaryPath) << std::endl;
-    std::cout << "Docs: " << (docPath.empty() ? "Not found" : docPath) << std::endl;
+
+    // std::cout << "Binary: " << (binaryPath.empty() ? "Not found" : binaryPath) << std::endl;
+    // std::cout << "Docs: " << (docPath.empty() ? "Not found" : docPath) << std::endl;
 }
 
 void processArguments(const std::unordered_map<std::string, std::string>& flags)

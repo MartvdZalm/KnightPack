@@ -16,6 +16,7 @@
       "name": "show_package_paths",
       "flag": "--show_package_paths",
       "short": "-p",
+      "flegs": ["-a"],
       "description": "Show the binary and documentation paths for a package"
     }
   ]
