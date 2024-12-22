@@ -13,7 +13,7 @@
 - **Show paths of installed packages** to see the binary and documentation locations.
 - **Search for packages** by name or description.
 - **Update packages** to their latest versions.
-- **List available updates** for installed packages.
+- **More Coming**
 
 ## Supported Package Managers
 
