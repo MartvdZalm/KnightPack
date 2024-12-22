@@ -9,7 +9,41 @@
 #include <unordered_map>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <chrono>
+#include <ctime>
 
+
+namespace Color
+{
+    const std::string RESET = "\033[0m";
+    const std::string GREEN = "\033[32m";
+    const std::string RED = "\033[31m";
+    const std::string YELLOW = "\033[33m";
+    const std::string BLUE = "\033[34m";
+    const std::string CYAN = "\033[36m";
+}
+
+std::string getCurrentTime()
+{
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+    std::tm* timeInfo = std::localtime(&currentTime);
+    
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeInfo);
+    
+    return std::string(buffer);
+}
+
+void logCommand(const std::string& command)
+{
+    std::ofstream logFile("command_log.txt", std::ios_base::app);
+    if (logFile.is_open()) {
+        logFile << getCurrentTime() << " - " << command << std::endl;
+    } else {
+        std::cerr << "Failed to open log file." << std::endl;
+    }
+}
 
 std::string exec(const char* cmd)
 {
@@ -29,27 +63,93 @@ std::string exec(const char* cmd)
         std::cerr << "Command failed or returned empty output." << std::endl;
     }
 
+    logCommand(std::string(cmd));
+
     return result;
+}
+
+class PackageManager
+{
+public:
+    static std::string get()
+    {
+        static std::string packageManager = detectPackageManager();
+        return packageManager;
+    }
+
+private:
+    static std::string detectPackageManager()
+    {
+        std::string result = exec("which apt");
+        if (!result.empty()) {
+            return "apt";
+        }
+
+        result = exec("which yum");
+        if (!result.empty()) {
+            return "yum";
+        }
+
+        return "unknown";
+    }
+};
+
+void printSuccess(const std::string& message)
+{
+    std::cout << Color::GREEN << message << Color::RESET << std::endl;
+}
+
+void printError(const std::string& message)
+{
+    std::cout << Color::RED << message << Color::RESET << std::endl;
+}
+
+void printWarning(const std::string& message)
+{
+    std::cout << Color::YELLOW << message << Color::RESET << std::endl; 
+}
+
+void printInfo(const std::string& message)
+{
+    std::cout << Color::CYAN << message << Color::RESET << std::endl;
 }
 
 void installPackage(const std::string& packageName)
 {
-    std::string cmd = "sudo apt-get install -y " + packageName;
+    std::string cmd = "sudo " + PackageManager::get() + " install -y " + packageName;
     std::cout << exec(cmd.c_str()) << std::endl;
 }
 
 void removePackage(const std::string& packageName)
 {
-    std::string cmd = "sudo apt-get remove -y " + packageName;
+    std::string cmd = "sudo " + PackageManager::get() + " remove -y " + packageName;
     std::cout << exec(cmd.c_str()) << std::endl;
+}
+
+void listInstalledPackages()
+{
+    std::string result = exec("dpkg -l");
+    std::cout << result << std::endl;
 }
 
 void displayHelp(const nlohmann::json& flagsJson)
 {
+    std::cout << Color::BLUE <<  "Package Manager Help" << Color::RESET << std::endl;
+    std::cout << "Usage: [command] [options]\n" << std::endl;
     std::cout << "Available commands: " << std::endl;
     for (const auto& flag : flagsJson["flags"]) {
-        std::cout << "  " << flag["short"] << ", " << flag["flag"] << " : " << flag["description"] << std::endl;
+        if (flag.contains("short")) {
+            std::cout << "  " << flag["short"] << ", " << flag["flag"] << " : " << flag["description"] << std::endl;
+        } else {
+            std::cout << "  " << flag["flag"] << " : " << flag["description"] << std::endl;
+        }
     }
+}
+
+void showPackageDetails(const std::string& packageName)
+{
+    std::string result = exec(("apt-cache show " + packageName).c_str());
+    std::cout << "Package details for " << packageName << ":\n" << result << std::endl;
 }
 
 void showPackagePaths(const std::string& packageName)
@@ -62,19 +162,8 @@ void showPackagePaths(const std::string& packageName)
     std::istringstream resultStream(result);
     std::string line;
     while (std::getline(resultStream, line)) {
-        if (line.find("/bin/") != std::string::npos) {
-            binaryPath = line;
-        }
-        if (line.find("/share/doc/") != std::string::npos) {
-            docPath = line;
-        }
-
         std::cout << line << std::endl;
     }
-
-
-    // std::cout << "Binary: " << (binaryPath.empty() ? "Not found" : binaryPath) << std::endl;
-    // std::cout << "Docs: " << (docPath.empty() ? "Not found" : docPath) << std::endl;
 }
 
 void processArguments(const std::unordered_map<std::string, std::string>& flags)
@@ -100,6 +189,14 @@ void processArguments(const std::unordered_map<std::string, std::string>& flags)
     if (flags.find("remove") != flags.end()) {
         removePackage(flags.at("remove"));
     }
+
+    if (flags.find("list_installed") != flags.end()) {
+        listInstalledPackages();
+    }
+
+    if (flags.find("show_package_details") != flags.end()) {
+        showPackageDetails(flags.at("show_package_details"));
+    }
 }
 
 int main(int argc, char* argv[])
@@ -124,7 +221,7 @@ int main(int argc, char* argv[])
         }
 
         bool flagHandled = false;
-        
+
         for (const auto& flag : flagsJson["flags"]) {
             if (arg == flag["flag"] || (flag.contains("short") && arg == flag["short"])) {
                 if (i + 1 < argc && !std::string(argv[i + 1]).starts_with("-")) {

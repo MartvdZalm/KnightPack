@@ -27,6 +27,18 @@
       "name": "remove",
       "flag": "--remove",
       "description": "Remove package"
+    },
+    {
+      "name": "list_installed",
+      "flag": "--list",
+      "short": "-l",
+      "description": "List installed packages"
+    },
+    {
+      "name": "show_package_details",
+      "flag": "--show-details",
+      "short": "-d",
+      "description": "Show package details"
     }
   ]
 }
