@@ -1,6 +1,7 @@
 # KnightPack
 
 **KnightPack** is a command-line interface (CLI) tool for managing packages across multiple package managers on Unix-based systems, including `brew`, `apt`, `yum`, and `pacman`. It simplifies tasks like installing, removing, listing, updating, and viewing package details from a single interface, making it ideal for both Linux and macOS users.
+
 **Note:** This project is currently under active development. New features and improvements are being actively worked on.
 
 ## Features
