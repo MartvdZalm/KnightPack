@@ -39,6 +39,16 @@
       "flag": "--show-details",
       "short": "-d",
       "description": "Show package details"
+    },
+    {
+      "name": "display_history",
+      "flag": "--history",
+      "description": "Displays the command history"
+    },
+    {
+      "name": "clear_history",
+      "flag": "--cl-history",
+      "description": "Clears the command history"
     }
   ]
 }

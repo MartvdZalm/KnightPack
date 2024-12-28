@@ -278,6 +278,37 @@ void showPackagePaths(const std::string& packageName)
     std::cout << "Package paths for " << packageName << ":\n" << result << std::endl;
 }
 
+void displayHistory()
+{
+    std::ifstream file("command_log.txt");
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open command_log.txt" << std::endl;
+        return;
+    }
+
+    char ch;
+    while (file.get(ch)) {
+        std::cout << ch;
+    }
+
+    file.close();
+}
+
+void clearHistory()
+{
+    std::ofstream file("command_log.txt", std::ios::trunc);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open command_log.txt" << std::endl;
+        return;
+    }
+
+    std::cout << "File content removed successfully!" << std::endl;
+
+    file.close();
+}
+
 void processArguments(const std::unordered_map<std::string, std::string>& flags)
 {
     if (flags.find("search_by_name") != flags.end()) {
@@ -334,6 +365,14 @@ void processArguments(const std::unordered_map<std::string, std::string>& flags)
             return;
         }
         showPackageDetails(flags.at("show_package_details"));
+    }
+
+    if (flags.find("display_history") != flags.end()) {
+        displayHistory();
+    }
+
+    if (flags.find("clear_history") != flags.end()) {
+        clearHistory();
     }
 }
 
